@@ -6,6 +6,10 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
+#include<queue>
+#include<iostream>
+
+using namespace std ;
 
 class HuffmanCodec {
 private:
@@ -19,8 +23,15 @@ private:
         HuffmanNode(char ch, int freq) 
             : character(ch), frequency(freq), left(nullptr), right(nullptr) {}
     };
+
+    struct compareNode{
+        bool operator()(HuffmanNode *a , HuffmanNode *b){
+            return a-> frequency ,b->frequency ;
+        }
+
+    };
     
-    std::unordered_map<char, std::string> huffmanCodes;
+    unordered_map<char, std::string> huffmanCodes;
     HuffmanNode* root;
     
     
