@@ -1,0 +1,32 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+// ======================================================
+// CORE DATA STRUCTURES (Day 1)
+// ======================================================
+struct Node {
+    char data;
+    unsigned frequency;
+    Node *left, *right;
+
+    Node(char data, unsigned frequency) {
+        this->data = data;
+        this->frequency = frequency;
+        left = right = nullptr;
+    }
+};
+
+class MinHeap {
+protected:
+    std::vector<Node*> heap;
+
+    // --- Day 2: Bubble Up ---
+    void bubbleUp(int index) {
+        if (index == 0) return;
+        int parent = (index - 1) / 2;
+        if (heap[index]->frequency < heap[parent]->frequency) {
+            std::swap(heap[index], heap[parent]);
+            bubbleUp(parent);
+        }
+    }
