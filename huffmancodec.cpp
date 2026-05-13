@@ -123,11 +123,67 @@ void HuffmanCodec::encode(const string& inputFile, const string& outputFile) {
         return;
     }
     
+    string treeFile = outputFile + ".tree";
+    saveTree(treeFile);
+    
     cout << "\n=== ENCODING COMPLETE ===" << endl;
 }
 
 void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
-    cout << "Decode function - Coming in Day 4!" << endl;
+    cout << "\n=== DECODING START ===" << endl;
+    cout << "Input file: " << inputFile << endl;
+    cout << "Output file: " << outputFile << endl;
+    
+    vector<bool> bits;
+    if (!readBinaryFile(inputFile, bits)) {
+        cerr << "Error: Could not read input file!" << endl;
+        return;
+    }
+    
+    cout << "Read " << bits.size() << " bits from compressed file" << endl;
+    
+    if (!root) {
+        cerr << "Error: No Huffman tree available! Please load tree first." << endl;
+        return;
+    }
+    
+    string decodedText = "";
+    HuffmanNode* current = root;
+    
+    cout << "\n=== DECODING PROCESS ===" << endl;
+    
+    for (size_t i = 0; i < bits.size(); i++) {
+        if (bits[i] == 0) {
+            if (current->left) current = current->left;
+            else {
+                cerr << "Error: Invalid bit at position " << i << endl;
+                return;
+            }
+        } else {
+            if (current->right) current = current->right;
+            else {
+                cerr << "Error: Invalid bit at position " << i << endl;
+                return;
+            }
+        }
+        
+        if (current->left == nullptr && current->right == nullptr) {
+            decodedText += current->character;
+            cout << "Found character '" << current->character << "' at bit position " << i << endl;
+            current = root;
+        }
+    }
+    
+    cout << "\n=== DECODING COMPLETE ===" << endl;
+    cout << "Decoded " << decodedText.length() << " characters" << endl;
+    cout << "Decoded text: \"" << decodedText << "\"" << endl;
+    
+    if (!writeFile(outputFile, decodedText)) {
+        cerr << "Error: Could not write output file!" << endl;
+        return;
+    }
+    
+    cout << "Successfully wrote decoded text to: " << outputFile << endl;
 }
 
 bool HuffmanCodec::readFile(const string& filename, string& content) {
@@ -159,6 +215,9 @@ bool HuffmanCodec::writeBinaryFile(const string& filename, const vector<bool>& b
         return false;
     }
     
+    int totalBits = bits.size();
+    file.write(reinterpret_cast<const char*>(&totalBits), sizeof(totalBits));
+    
     char buffer = 0;
     int bitCount = 0;
     
@@ -188,15 +247,88 @@ bool HuffmanCodec::readBinaryFile(const string& filename, vector<bool>& bits) {
         return false;
     }
     
+    int totalBits = 0;
+    file.read(reinterpret_cast<char*>(&totalBits), sizeof(totalBits));
+    
+    vector<char> bytes;
     char byte;
     while (file.read(&byte, 1)) {
-        for (int i = 7; i >= 0; i--) {
-            bits.push_back((byte >> i) & 1);
+        bytes.push_back(byte);
+    }
+    file.close();
+    
+    bits.clear();
+    bits.reserve(totalBits);
+    
+    for (size_t i = 0; i < bytes.size() && bits.size() < totalBits; i++) {
+        for (int j = 7; j >= 0 && bits.size() < totalBits; j--) {
+            bits.push_back((bytes[i] >> j) & 1);
         }
     }
     
-    file.close();
     return true;
+}
+
+void HuffmanCodec::saveTreeToFile(ofstream& file, HuffmanNode* node) {
+    if (!node) {
+        char marker = '#';
+        file.write(&marker, 1);
+        return;
+    }
+    
+    if (node->character != '\0') {
+        char marker = 'L';
+        file.write(&marker, 1);
+        file.write(&node->character, 1);
+    } else {
+        char marker = 'I';
+        file.write(&marker, 1);
+        saveTreeToFile(file, node->left);
+        saveTreeToFile(file, node->right);
+    }
+}
+
+void HuffmanCodec::saveTree(const string& filename) {
+    ofstream file(filename, ios::binary);
+    if (!file.is_open()) {
+        cerr << "Error: Could not save tree!" << endl;
+        return;
+    }
+    saveTreeToFile(file, root);
+    file.close();
+    cout << "Tree saved to: " << filename << endl;
+}
+
+void HuffmanCodec::loadTreeFromFile(ifstream& file, HuffmanNode*& node) {
+    char marker;
+    file.read(&marker, 1);
+    
+    if (marker == '#') {
+        node = nullptr;
+        return;
+    }
+    
+    if (marker == 'L') {
+        char ch;
+        file.read(&ch, 1);
+        node = new HuffmanNode(ch, 0);
+    } else if (marker == 'I') {
+        node = new HuffmanNode('\0', 0);
+        loadTreeFromFile(file, node->left);
+        loadTreeFromFile(file, node->right);
+    }
+}
+
+void HuffmanCodec::loadTree(const string& filename) {
+    ifstream file(filename, ios::binary);
+    if (!file.is_open()) {
+        cerr << "Error: Could not load tree!" << endl;
+        return;
+    }
+    deleteTree(root);
+    loadTreeFromFile(file, root);
+    file.close();
+    cout << "Tree loaded from: " << filename << endl;
 }
 
 double HuffmanCodec::getCompressionRatio() const {

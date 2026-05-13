@@ -1,4 +1,3 @@
-
 #ifndef HUFFMAN_CODEC_H
 #define HUFFMAN_CODEC_H
 
@@ -6,14 +5,13 @@
 #include <unordered_map>
 #include <vector>
 #include <fstream>
-#include<queue>
-#include<iostream>
+#include <queue>
+#include <iostream>
 
-using namespace std ;
+using namespace std;
 
 class HuffmanCodec {
 private:
-    
     struct HuffmanNode {
         char character;
         int frequency;
@@ -23,46 +21,45 @@ private:
         HuffmanNode(char ch, int freq) 
             : character(ch), frequency(freq), left(nullptr), right(nullptr) {}
     };
-
-    struct compareNode{
-        bool operator()(HuffmanNode *a , HuffmanNode *b){
-            return a-> frequency ,b->frequency ;
+    
+    struct CompareNode {
+        bool operator()(HuffmanNode* a, HuffmanNode* b) {
+            return a->frequency > b->frequency;
         }
-
     };
     
-    unordered_map<char, std::string> huffmanCodes;
+    unordered_map<char, string> huffmanCodes;
     HuffmanNode* root;
     
-    
-    void generateCodes(HuffmanNode* node, const std::string& code);
+    void generateCodes(HuffmanNode* node, const string& code);
     void deleteTree(HuffmanNode* node);
     
 public:
-    
     HuffmanCodec();
     ~HuffmanCodec();
     
-
-    void encode(const std::string& inputFile, const std::string& outputFile);
-    void decode(const std::string& inputFile, const std::string& outputFile);
+    void encode(const string& inputFile, const string& outputFile);
+    void decode(const string& inputFile, const string& outputFile);
     
-
-    bool readFile(const std::string& filename, std::string& content);
-    bool writeFile(const std::string& filename, const std::string& content);
-    bool writeBinaryFile(const std::string& filename, const std::vector<bool>& bits);
-    bool readBinaryFile(const std::string& filename, std::vector<bool>& bits);
-    
+    bool readFile(const string& filename, string& content);
+    bool writeFile(const string& filename, const string& content);
+    bool writeBinaryFile(const string& filename, const vector<bool>& bits);
+    bool readBinaryFile(const string& filename, vector<bool>& bits);
     
     double getCompressionRatio() const;
     size_t getOriginalSize() const;
     size_t getCompressedSize() const;
     void printStatistics() const;
     
-    
-    void buildFrequencyTable(const std::string& content);
+    void buildFrequencyTable(const string& content);
     void buildHuffmanTree();
     void generateHuffmanCodes();
+    
+    // Tree save/load functions - ADD THESE
+    void saveTree(const string& filename);
+    void loadTree(const string& filename);
+    void saveTreeToFile(ofstream& file, HuffmanNode* node);
+    void loadTreeFromFile(ifstream& file, HuffmanNode*& node);
 };
 
-#endif 
+#endif
