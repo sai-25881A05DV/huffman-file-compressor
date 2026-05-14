@@ -46,25 +46,55 @@ void HuffmanCodec::encode(const string& inputFile, const string& outputFile) {
     cout << "Input file: " << inputFile << endl;
     cout << "Output file: " << outputFile << endl;
     
+    // Error check: input file exists
     string content;
     if (!readFile(inputFile, content)) {
-        cerr << "Error: Could not read input file!" << endl;
+        cerr << "Error: Could not read input file '" << inputFile << "'!" << endl;
+        return;
+    }
+    
+    // Error check: empty file
+    if (content.empty()) {
+        cerr << "Warning: Input file is empty!" << endl;
+        // Create empty output
+        vector<bool> emptyBits;
+        writeBinaryFile(outputFile, emptyBits);
+        cout << "Created empty compressed file" << endl;
         return;
     }
     
     cout << "Read " << content.length() << " characters" << endl;
-    cout << "Content: \"" << content << "\"" << endl;
+    cout << "Content: \"" << content.substr(0, 50) << (content.length() > 50 ? "..." : "") << "\"" << endl;
     
+    // Count frequencies
     unordered_map<char, int> frequencies;
     for (char c : content) {
         frequencies[c]++;
     }
     
     cout << "\n=== FREQUENCIES ===" << endl;
-    for (auto& pair : frequencies) {
-        cout << "'" << pair.first << "': " << pair.second << endl;
+    cout << "Unique characters: " << frequencies.size() << endl;
+    
+    // Handle special case: only one unique character
+    if (frequencies.size() == 1) {
+        cout << "Special case: Only one unique character" << endl;
+        // Create simple encoding: just store the character and count
+        ofstream file(outputFile, ios::binary);
+        int marker = -1;  // Special marker for single char
+        file.write(reinterpret_cast<const char*>(&marker), sizeof(marker));
+        char c = content[0];
+        file.write(&c, 1);
+        int length = content.length();
+        file.write(reinterpret_cast<const char*>(&length), sizeof(length));
+        file.close();
+        
+        // Save tree
+        saveTree(outputFile + ".tree");
+        cout << "\n=== ENCODING COMPLETE (Single character optimization) ===" << endl;
+        return;
     }
     
+    // Build Huffman tree
     auto cmp = [](HuffmanNode* left, HuffmanNode* right) { 
         return left->frequency > right->frequency; 
     };
@@ -92,27 +122,32 @@ void HuffmanCodec::encode(const string& inputFile, const string& outputFile) {
     
     root = pq.top();
     
+    // Generate codes
     huffmanCodes.clear();
     cout << "\n=== HUFFMAN CODES ===" << endl;
     generateCodes(root, "");
     
+    // Encode to binary
     string binaryString = "";
     for (char c : content) {
+        if (huffmanCodes.find(c) == huffmanCodes.end()) {
+            cerr << "Error: Character '" << c << "' not found in Huffman codes!" << endl;
+            return;
+        }
         binaryString += huffmanCodes[c];
     }
     
     cout << "\n=== ENCODED OUTPUT ===" << endl;
-    cout << "Original: " << content << endl;
-    cout << "Binary:   " << binaryString << endl;
     cout << "Original size: " << content.length() << " bytes (" 
          << content.length() * 8 << " bits)" << endl;
     cout << "Compressed size: " << binaryString.length() << " bits" << endl;
     
     if (content.length() * 8 > 0) {
-        cout << "Compression ratio: " << (binaryString.length() * 100.0) / (content.length() * 8) 
-             << "%" << endl;
+        double ratio = (binaryString.length() * 100.0) / (content.length() * 8);
+        cout << "Compression ratio: " << ratio << "%" << endl;
     }
     
+    // Convert to bits and write
     vector<bool> bits;
     for (char c : binaryString) {
         bits.push_back(c == '1');
@@ -123,6 +158,7 @@ void HuffmanCodec::encode(const string& inputFile, const string& outputFile) {
         return;
     }
     
+    // Save the tree
     string treeFile = outputFile + ".tree";
     saveTree(treeFile);
     
@@ -134,49 +170,101 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     cout << "Input file: " << inputFile << endl;
     cout << "Output file: " << outputFile << endl;
     
+    // Check if input file exists
+    ifstream check(inputFile, ios::binary);
+    if (!check.is_open()) {
+        cerr << "Error: Input file '" << inputFile << "' does not exist!" << endl;
+        return;
+    }
+    check.close();
+    
+    // Check for single character special case
+    ifstream test(inputFile, ios::binary);
+    int marker;
+    test.read(reinterpret_cast<char*>(&marker), sizeof(marker));
+    test.close();
+    
+    if (marker == -1) {
+        cout << "Detected single-character encoding" << endl;
+        ifstream file(inputFile, ios::binary);
+        file.read(reinterpret_cast<char*>(&marker), sizeof(marker));
+        char c;
+        file.read(&c, 1);
+        int length;
+        file.read(reinterpret_cast<char*>(&length), sizeof(length));
+        file.close();
+        
+        string decodedText(length, c);
+        writeFile(outputFile, decodedText);
+        cout << "Decoded " << length << " characters of '" << c << "'" << endl;
+        cout << "\n=== DECODING COMPLETE ===" << endl;
+        return;
+    }
+    
+    // Normal decoding
     vector<bool> bits;
     if (!readBinaryFile(inputFile, bits)) {
-        cerr << "Error: Could not read input file!" << endl;
+        cerr << "Error: Could not read binary file!" << endl;
         return;
     }
     
     cout << "Read " << bits.size() << " bits from compressed file" << endl;
+    
+    if (bits.empty()) {
+        cout << "Empty compressed file, creating empty output" << endl;
+        writeFile(outputFile, "");
+        return;
+    }
     
     if (!root) {
         cerr << "Error: No Huffman tree available! Please load tree first." << endl;
         return;
     }
     
+    // Decode the bits
     string decodedText = "";
     HuffmanNode* current = root;
+    int bitsProcessed = 0;
     
     cout << "\n=== DECODING PROCESS ===" << endl;
     
     for (size_t i = 0; i < bits.size(); i++) {
+        // Navigate the tree
         if (bits[i] == 0) {
-            if (current->left) current = current->left;
-            else {
-                cerr << "Error: Invalid bit at position " << i << endl;
+            if (current->left) {
+                current = current->left;
+            } else {
+                cerr << "Error: Invalid bit sequence at position " << i << " (no left child)" << endl;
                 return;
             }
         } else {
-            if (current->right) current = current->right;
-            else {
-                cerr << "Error: Invalid bit at position " << i << endl;
+            if (current->right) {
+                current = current->right;
+            } else {
+                cerr << "Error: Invalid bit sequence at position " << i << " (no right child)" << endl;
                 return;
             }
         }
         
+        // Check if we've reached a leaf
         if (current->left == nullptr && current->right == nullptr) {
             decodedText += current->character;
-            cout << "Found character '" << current->character << "' at bit position " << i << endl;
-            current = root;
+            bitsProcessed++;
+            if (bitsProcessed <= 10) {  // Show first 10 characters only
+                cout << "Found character '" << current->character << "' at bit position " << i << endl;
+            }
+            current = root;  // Reset to root for next character
         }
+    }
+    
+    if (bitsProcessed > 10) {
+        cout << "... and " << (bitsProcessed - 10) << " more characters" << endl;
     }
     
     cout << "\n=== DECODING COMPLETE ===" << endl;
     cout << "Decoded " << decodedText.length() << " characters" << endl;
-    cout << "Decoded text: \"" << decodedText << "\"" << endl;
+    cout << "Decoded text preview: \"" << decodedText.substr(0, 50) 
+         << (decodedText.length() > 50 ? "..." : "") << "\"" << endl;
     
     if (!writeFile(outputFile, decodedText)) {
         cerr << "Error: Could not write output file!" << endl;
@@ -184,9 +272,7 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     }
     
     cout << "Successfully wrote decoded text to: " << outputFile << endl;
-}
-
-bool HuffmanCodec::readFile(const string& filename, string& content) {
+}bool HuffmanCodec::readFile(const string& filename, string& content) {
     ifstream file(filename);
     if (!file.is_open()) {
         return false;

@@ -1,81 +1,77 @@
-#include<iostream>
-#include<string>
-#include<cstring>
-#include<fstream>
- using namespace std ;
-class huffman_codec{
- public:
-  huffman_codec(){
-   
-  }
-  bool compress(const string& inputfile , const string& outputfile){
-    cout<<"compressing"<<inputfile<<"To"<<outputfile;
-    return true ;
-  }
-  bool decompress(const string&inputfile , const string& outputfile){
-    cout<<"decompressing"<<inputfile<<"to"<<outputfile;
-    return true ;
-  }
-};
+#include "huffmancodec.h"
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <fstream>
+using namespace std;
 
-void print_help(){
-    cout<<"~~~~~ HUFFMAN FILE COMPRESSOR ~~~~~~~"<<endl;
-    cout<<"Usage for the compressor details"<<endl;
-    cout << "  ./compressor --compress <input_file> <output_file>\n";
-    cout << "  ./compressor --decompress <input_file> <output_file>\n";
-    cout << "  ./compressor --help\n\n";
-    
-    cout<<"options:   "<<endl;
-    cout<<" --compress    : compresses a file using the huffman method"<<endl;
-    cout<<" --decompress  : decompresses a huffman file"<<endl;
-    cout<<" --help        : display this help message"<<endl ;
-
-    cout<<"\n example \n"<<endl;
-    cout << "  ./compressor --compress document.txt document.huff\n";
-    cout << "  ./compressor --decompress document.huff document.txt\n\n";
+void print_help() {
+    cout<<"\n~~~~~ HUFFMAN FILE COMPRESSOR ~~~~~~~"<<endl;
+    cout<<"======================================"<<endl;
+    cout<<"Usage:"<<endl;
+    cout<<"  ./compressor --compress <input_file> <output_file>"<<endl;
+    cout<<"  ./compressor --decompress <input_file> <output_file>"<<endl;
+    cout<<"  ./compressor --help"<<endl;
+    cout<<"\nOptions:"<<endl;
+    cout<<"  --compress    : Compresses a file using Huffman coding"<<endl;
+    cout<<"  --decompress  : Decompresses a Huffman compressed file"<<endl;
+    cout<<"  --help        : Display this help message"<<endl;
+    cout<<"\nExamples:"<<endl;
+    cout<<"  ./compressor --compress document.txt document.huff"<<endl;
+    cout<<"  ./compressor --decompress document.huff document.txt"<<endl;
+    cout<<"======================================\n"<<endl;
 }
-    
-int main(int argc , char* argv[]){
+
+int main(int argc, char* argv[]) {
+    // Check for help
     if (argc == 1 || (argc >= 2 && strcmp(argv[1], "--help") == 0)) {
-    print_help();
-    return 0;
-} 
- if (argc<4){
-    cerr<<"error please enter the valid commands"<<endl ;
-    print_help();
-    return 1 ;
- }
+        print_help();
+        return 0;
+    } 
+    
+    // Check minimum arguments
+    if (argc < 4) {
+        cerr<<"\n[ERROR] Invalid number of arguments!"<<endl;
+        print_help();
+        return 1;
+    }
+    
     string mode = argv[1];
     string inputfile = argv[2];
     string outputfile = argv[3];
-
-    huffman_codec codec ;
-    if(mode=="-- compress"){
-        cout<<"\t ----starting compression....---- \t "<<endl ;
-        if(codec.compress(inputfile,outputfile)){
-            cout<<"[sucess] File has been compressed"<<endl;
-        }
-        else {
-            cerr<<"compression failed"<<endl;
-            return 1 ;
-
-        }
+    
+    // Fix: Remove space from "--compress" and "--decompress"
+    if (mode == "--compress") {
+        cout<<"\n\t===== STARTING COMPRESSION ====="<<endl;
+        cout<<"Input file:  "<<inputfile<<endl;
+        cout<<"Output file: "<<outputfile<<endl;
+        
+        HuffmanCodec codec;
+        codec.encode(inputfile, outputfile);
+        
+        cout<<"\n[SUCCESS] File compressed successfully!"<<endl;
+        
+    } 
+    else if (mode == "--decompress") {
+        cout<<"\n\t===== STARTING DECOMPRESSION ====="<<endl;
+        cout<<"Input file:  "<<inputfile<<endl;
+        cout<<"Output file: "<<outputfile<<endl;
+        
+        HuffmanCodec codec;
+        
+        // Load the tree file (same name as input + ".tree")
+        string treeFile = inputfile + ".tree";
+        codec.loadTree(treeFile);
+        
+        codec.decode(inputfile, outputfile);
+        
+        cout<<"\n[SUCCESS] File decompressed successfully!"<<endl;
+    } 
+    else {
+        cerr<<"\n[ERROR] Unknown mode: "<<mode<<endl;
+        cerr<<"Use --help, --compress, or --decompress"<<endl;
+        return 1;
     }
-    else if (mode=="-- decompress"){
-        cout<<"\t --starting decompression--";
-        if(codec.decompress(inputfile,outputfile)){
-            cout<<"[sucess] decompression is done";
-        }
-            else {
-                cerr<<"error in decompression";
-                return 1 ;
-            }
-        }
-        else {
-            cerr<<"\n[error] unknown mode!!"<<mode<<endl;
-            cerr<<"use only --help ,--compress,--decompress"<<endl; 
-            return 1 ;
-
-        }
-        return 0 ;
-    }
+    
+    return 0;
+}
