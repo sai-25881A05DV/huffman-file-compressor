@@ -158,7 +158,10 @@ void HuffmanCodec::encode(const string& inputFile, const string& outputFile) {
         return;
     }
     
+<<<<<<< HEAD
     // Save the tree
+=======
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
     string treeFile = outputFile + ".tree";
     saveTree(treeFile);
     
@@ -170,6 +173,7 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     cout << "Input file: " << inputFile << endl;
     cout << "Output file: " << outputFile << endl;
     
+<<<<<<< HEAD
     // Check if input file exists
     ifstream check(inputFile, ios::binary);
     if (!check.is_open()) {
@@ -205,30 +209,44 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     vector<bool> bits;
     if (!readBinaryFile(inputFile, bits)) {
         cerr << "Error: Could not read binary file!" << endl;
+=======
+    vector<bool> bits;
+    if (!readBinaryFile(inputFile, bits)) {
+        cerr << "Error: Could not read input file!" << endl;
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
         return;
     }
     
     cout << "Read " << bits.size() << " bits from compressed file" << endl;
     
+<<<<<<< HEAD
     if (bits.empty()) {
         cout << "Empty compressed file, creating empty output" << endl;
         writeFile(outputFile, "");
         return;
     }
     
+=======
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
     if (!root) {
         cerr << "Error: No Huffman tree available! Please load tree first." << endl;
         return;
     }
     
+<<<<<<< HEAD
     // Decode the bits
     string decodedText = "";
     HuffmanNode* current = root;
     int bitsProcessed = 0;
+=======
+    string decodedText = "";
+    HuffmanNode* current = root;
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
     
     cout << "\n=== DECODING PROCESS ===" << endl;
     
     for (size_t i = 0; i < bits.size(); i++) {
+<<<<<<< HEAD
         // Navigate the tree
         if (bits[i] == 0) {
             if (current->left) {
@@ -242,10 +260,23 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
                 current = current->right;
             } else {
                 cerr << "Error: Invalid bit sequence at position " << i << " (no right child)" << endl;
+=======
+        if (bits[i] == 0) {
+            if (current->left) current = current->left;
+            else {
+                cerr << "Error: Invalid bit at position " << i << endl;
+                return;
+            }
+        } else {
+            if (current->right) current = current->right;
+            else {
+                cerr << "Error: Invalid bit at position " << i << endl;
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
                 return;
             }
         }
         
+<<<<<<< HEAD
         // Check if we've reached a leaf
         if (current->left == nullptr && current->right == nullptr) {
             decodedText += current->character;
@@ -265,6 +296,18 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     cout << "Decoded " << decodedText.length() << " characters" << endl;
     cout << "Decoded text preview: \"" << decodedText.substr(0, 50) 
          << (decodedText.length() > 50 ? "..." : "") << "\"" << endl;
+=======
+        if (current->left == nullptr && current->right == nullptr) {
+            decodedText += current->character;
+            cout << "Found character '" << current->character << "' at bit position " << i << endl;
+            current = root;
+        }
+    }
+    
+    cout << "\n=== DECODING COMPLETE ===" << endl;
+    cout << "Decoded " << decodedText.length() << " characters" << endl;
+    cout << "Decoded text: \"" << decodedText << "\"" << endl;
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
     
     if (!writeFile(outputFile, decodedText)) {
         cerr << "Error: Could not write output file!" << endl;
@@ -272,7 +315,13 @@ void HuffmanCodec::decode(const string& inputFile, const string& outputFile) {
     }
     
     cout << "Successfully wrote decoded text to: " << outputFile << endl;
+<<<<<<< HEAD
 }bool HuffmanCodec::readFile(const string& filename, string& content) {
+=======
+}
+
+bool HuffmanCodec::readFile(const string& filename, string& content) {
+>>>>>>> 44c41e3be068bf4fb473ee1a9a88dea61a0cbea2
     ifstream file(filename);
     if (!file.is_open()) {
         return false;
