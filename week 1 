@@ -4,7 +4,7 @@
 #include <algorithm>
 
 // ======================================================
-// CORE DATA STRUCTURES (Day 1)
+// DAY 1: CORE DATA STRUCTURES
 // ======================================================
 struct Node {
     char data;
@@ -22,7 +22,7 @@ class MinHeap {
 protected:
     std::vector<Node*> heap;
 
-    // --- Day 2: Bubble Up ---
+    // --- DAY 2: Bubble Up ---
     void bubbleUp(int index) {
         if (index == 0) return;
         int parent = (index - 1) / 2;
@@ -32,7 +32,7 @@ protected:
         }
     }
 
-    // --- Day 3: Bubble Down ---
+    // --- DAY 3: Bubble Down ---
     void bubbleDown(int index) {
         int smallest = index;
         int left = 2 * index + 1;
@@ -52,30 +52,43 @@ protected:
 public:
     MinHeap() {}
 
-    // Day 2: Insert
+    // --- DAY 2: Insert ---
     void insert(Node* node) {
         heap.push_back(node);
         bubbleUp(heap.size() - 1);
     }
 
-    // --- Day 3: Extract Min ---
+    // --- DAY 3: Extract Min ---
     Node* extractMin() {
         if (heap.empty()) return nullptr;
-
         Node* root = heap[0];
-        heap[0] = heap.back(); // Move last element to root
-        heap.pop_back();       // Remove last element
-
-        if (!heap.empty()) {
-            bubbleDown(0);     // Restore heap property
-        }
+        heap[0] = heap.back();
+        heap.pop_back();
+        if (!heap.empty()) bubbleDown(0);
         return root;
     }
 
-    // Helpers for verification
-    int size() const { return heap.size(); }
+    // ======================================================
+    // DAY 4: NEW HELPER FUNCTIONS & BUILD HEAP
+    // ======================================================
+
+    // Day 4: Peek at the minimum without removing it
+    Node* getMin() const {
+        if (heap.empty()) return nullptr;
+        return heap[0];
+    }
+
+    // Day 4: Standard size and emptiness helpers
+    int size() const { return (int)heap.size(); }
     bool isEmpty() const { return heap.empty(); }
+
+    // Day 4: Build Heap (Heapify)
+    // Turns an unsorted vector into a valid MinHeap
+    void buildHeap(std::vector<Node*>& nodes) {
+        heap = nodes;
+        // Start from the last non-leaf node and work up to the root
+        for (int i = (heap.size() / 2) - 1; i >= 0; i--) {
+            bubbleDown(i);
+        }
+    }
 };
-
-
-
