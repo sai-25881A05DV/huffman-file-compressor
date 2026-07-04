@@ -7,6 +7,9 @@ CXXFLAGS = -Wall -O2
 # Target executable name
 TARGET = compressor
 
+# Installation prefix (change with `make PREFIX=/custom/path install`)
+PREFIX ?= /usr/local
+
 # Object files needed
 OBJS = huffmancodec.o main.o
 
@@ -44,6 +47,15 @@ test: $(TARGET)
 	@echo "Verifying..."
 	@diff test.txt test_decoded.txt && echo "✅ SUCCESS!" || echo "❌ FAILED!"
 
+# Install the compressor to $(PREFIX)/bin
+install: $(TARGET)
+	install -d $(PREFIX)/bin
+	install -m 0755 $(TARGET) $(PREFIX)/bin/$(TARGET)
+
+# Uninstall the compressor from $(PREFIX)/bin
+uninstall:
+	rm -f $(PREFIX)/bin/$(TARGET)
+
 # Help - show available commands
 help:
 	@echo "Available commands:"
@@ -54,4 +66,4 @@ help:
 	@echo "  make help     - Show this help"
 
 # Phony targets (not actual files)
-.PHONY: all clean run test help
+.PHONY: all clean run test help install uninstall
