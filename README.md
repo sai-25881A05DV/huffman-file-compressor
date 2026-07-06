@@ -47,48 +47,82 @@ Original file  ──►  Frequency Analysis  ──►  Huffman Tree  ──►
 # Clone the repo
 git clone https://github.com/sai-25881A05DV/huffman-file-compressor.git
 cd huffman-file-compressor
+```
 
-# Build
+### 🐧 Linux / macOS
+
+```bash
+make
+./compressor --help
+```
+
+### 🪟 Windows
+
+Windows doesn't ship with `make` or `./` path syntax, so use one of these:
+
+**Option A — Compile directly with g++ (no `make` needed)**
+
+```cmd
+g++ -o compressor.exe main.cpp huffmancodec.cpp -std=c++11
+compressor.exe --help
+```
+
+**Option B — Install `make` for Windows**
+
+Install [MSYS2](https://www.msys2.org/), then inside the MSYS2 terminal:
+
+```bash
+pacman -S make mingw-w64-x86_64-gcc
 make
 ```
 
-This produces a `compressor` executable in the project root.
-
-```bash
-./compressor --help
-```
+> 💡 Don't have `g++`? Check first with `g++ --version` in Command Prompt. If it's not recognized, install a compiler via [MSYS2](https://www.msys2.org/) or [MinGW-w64](https://www.mingw-w64.org/) before continuing.
 
 ---
 
 ## 🧑‍💻 Usage
 
-**Compress a file:**
+**Linux / macOS:**
 
 ```bash
 ./compressor --compress input.txt output.huff
+./compressor --decompress output.huff restored.txt
 ```
 
-**Decompress it back:**
+**Windows (Command Prompt / PowerShell):**
 
-```bash
-./compressor --decompress output.huff restored.txt
+```cmd
+compressor.exe --compress input.txt output.huff
+compressor.exe --decompress output.huff restored.txt
 ```
 
 > ⚠️ **Important:** Compressing a file also writes a matching tree file (e.g. `output.huff.tree`). Keep it alongside the compressed file — decompression needs both to rebuild the original data.
 
 ### Example Workflow
 
+**Linux / macOS:**
+
 ```bash
 make
 ./compressor --compress document.txt document.huff
 ./compressor --decompress document.huff document_restored.txt
-
 diff document.txt document_restored.txt   # should show no differences
+```
+
+**Windows:**
+
+```cmd
+g++ -o compressor.exe main.cpp huffmancodec.cpp -std=c++11
+compressor.exe --compress document.txt document.huff
+compressor.exe --decompress document.huff document_restored.txt
+fc document.txt document_restored.txt   :: should show no differences
 ```
 
 ---
 
 ## 🛠️ Helpful Commands
+
+**Linux / macOS (using `make`):**
 
 | Command        | What it does                                              |
 |-----------------|------------------------------------------------------------|
@@ -97,11 +131,19 @@ diff document.txt document_restored.txt   # should show no differences
 | `make test`     | Runs a full compress/decompress cycle on a sample file      |
 | `make clean`    | Removes the executable and generated files                  |
 
+**Windows (using `g++` directly):**
+
+| Command                                                          | What it does                          |
+|--------------------------------------------------------------------|------------------------------------------|
+| `g++ -o compressor.exe main.cpp huffmancodec.cpp -std=c++11`        | Builds `compressor.exe`                |
+| `compressor.exe --help`                                             | Shows the help screen                  |
+| `del compressor.exe`                                                 | Removes the built executable            |
+
 ---
 
 ## 📦 Install (optional)
 
-Make `compressor` available system-wide:
+**Linux / macOS** — make `compressor` available system-wide:
 
 ```bash
 sudo make install      # installs to /usr/local/bin
@@ -113,6 +155,8 @@ Or use the bundled installer script, which builds then installs automatically:
 ```bash
 ./install.sh
 ```
+
+**Windows** — no system install needed. Just keep `compressor.exe` in the project folder and run it from there, or add your project folder to `PATH` via *Environment Variables* if you want to run `compressor` from anywhere.
 
 ---
 
