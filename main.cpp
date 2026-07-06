@@ -22,9 +22,98 @@ void print_help() {
     cout<<"======================================\n"<<endl;
 }
 
+void runCompress(const string& inputfile, const string& outputfile) {
+    cout<<"\n\t===== STARTING COMPRESSION ====="<<endl;
+    cout<<"Input file:  "<<inputfile<<endl;
+    cout<<"Output file: "<<outputfile<<endl;
+
+    HuffmanCodec codec;
+    codec.encode(inputfile, outputfile);
+
+    cout<<"\n[SUCCESS] File compressed successfully!"<<endl;
+    codec.printStatistics();
+}
+
+void runDecompress(const string& inputfile, const string& outputfile) {
+    cout<<"\n\t===== STARTING DECOMPRESSION ====="<<endl;
+    cout<<"Input file:  "<<inputfile<<endl;
+    cout<<"Output file: "<<outputfile<<endl;
+
+    HuffmanCodec codec;
+
+    // Load the tree file (same name as input + ".tree")
+    string treeFile = inputfile + ".tree";
+    codec.loadTree(treeFile);
+
+    codec.decode(inputfile, outputfile);
+
+    cout<<"\n[SUCCESS] File decompressed successfully!"<<endl;
+}
+
+void print_menu() {
+    cout<<"\n======================================"<<endl;
+    cout<<"~~~~~ HUFFMAN FILE COMPRESSOR ~~~~~~~"<<endl;
+    cout<<"======================================"<<endl;
+    cout<<"1. Compress a file"<<endl;
+    cout<<"2. Decompress a file"<<endl;
+    cout<<"3. Help"<<endl;
+    cout<<"4. Exit"<<endl;
+    cout<<"======================================"<<endl;
+    cout<<"Enter choice: ";
+}
+
+void runInteractiveMenu() {
+    while (true) {
+        print_menu();
+        string choiceStr;
+        getline(cin, choiceStr);
+
+        if (choiceStr == "1") {
+            string inputfile, outputfile;
+            cout<<"Enter input file path: ";
+            getline(cin, inputfile);
+            cout<<"Enter output file path (e.g. output.huff): ";
+            getline(cin, outputfile);
+            try {
+                runCompress(inputfile, outputfile);
+            } catch (const exception& e) {
+                cerr<<"\n[ERROR] "<<e.what()<<endl;
+            }
+        }
+        else if (choiceStr == "2") {
+            string inputfile, outputfile;
+            cout<<"Enter compressed file path (e.g. output.huff): ";
+            getline(cin, inputfile);
+            cout<<"Enter output file path (e.g. restored.txt): ";
+            getline(cin, outputfile);
+            try {
+                runDecompress(inputfile, outputfile);
+            } catch (const exception& e) {
+                cerr<<"\n[ERROR] "<<e.what()<<endl;
+            }
+        }
+        else if (choiceStr == "3") {
+            print_help();
+        }
+        else if (choiceStr == "4") {
+            cout<<"\nGoodbye!\n"<<endl;
+            break;
+        }
+        else {
+            cout<<"\n[ERROR] Invalid choice. Please enter 1, 2, 3, or 4.\n"<<endl;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
+    // No arguments: launch interactive menu
+    if (argc == 1) {
+        runInteractiveMenu();
+        return 0;
+    }
+
     // Check for help
-    if (argc == 1 || (argc >= 2 && strcmp(argv[1], "--help") == 0)) {
+    if (argc >= 2 && strcmp(argv[1], "--help") == 0) {
         print_help();
         return 0;
     } 
@@ -42,30 +131,10 @@ int main(int argc, char* argv[]) {
     
     // Fix: Remove space from "--compress" and "--decompress"
     if (mode == "--compress") {
-        cout<<"\n\t===== STARTING COMPRESSION ====="<<endl;
-        cout<<"Input file:  "<<inputfile<<endl;
-        cout<<"Output file: "<<outputfile<<endl;
-        
-        HuffmanCodec codec;
-        codec.encode(inputfile, outputfile);
-        
-        cout<<"\n[SUCCESS] File compressed successfully!"<<endl;
-        
+        runCompress(inputfile, outputfile);
     } 
     else if (mode == "--decompress") {
-        cout<<"\n\t===== STARTING DECOMPRESSION ====="<<endl;
-        cout<<"Input file:  "<<inputfile<<endl;
-        cout<<"Output file: "<<outputfile<<endl;
-        
-        HuffmanCodec codec;
-        
-        // Load the tree file (same name as input + ".tree")
-        string treeFile = inputfile + ".tree";
-        codec.loadTree(treeFile);
-        
-        codec.decode(inputfile, outputfile);
-        
-        cout<<"\n[SUCCESS] File decompressed successfully!"<<endl;
+        runDecompress(inputfile, outputfile);
     } 
     else {
         cerr<<"\n[ERROR] Unknown mode: "<<mode<<endl;
